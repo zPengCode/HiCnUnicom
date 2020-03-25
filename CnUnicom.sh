@@ -186,12 +186,42 @@ function club() {
     done
 }
 
+function qychinaunicom() {
+    echo; echo $(date) starting qychinaunicom...
+    data="yw_code=&desmobile=$username&version=android%406.0100"
+    curl -i -sLA "$UA" -b $workdir/cookie -c $workdir/cookie_qy --data "$data" https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://qy.chinaunicom.cn/mobile/auth/index >$workdir/qychinaunicom.log
+    ticket=$(cat $workdir/qychinaunicom.log | grep -oE "ticket=\w*" | awk -F'[=]' '{print $2}' | head -n1)
+    curl -sA "$UA" -b $workdir/cookie_qy -c $workdir/cookie_qy --data "ecsTicket=$ticket" https://qy.chinaunicom.cn/mobile/auth/auth >/dev/null
+    
+    #签到
+    curl -sA "$UA" -b $workdir/cookie_qy "https://qy.chinaunicom.cn/mobile/actsign/queryAccSign?day=$(date +%Y%m)"
+    
+    #红包雨
+    activityId=$(curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile-h5/js/redPackageRain/redRain.js | grep -E "var activityId" | grep -oE "[0-9]*")
+    sleep $(shuf -i 5-10 -n 1)
+    curl -sA "$UA" -b $workdir/cookie_qy "https://qy.chinaunicom.cn/mobile/lottery/doLo?actId=$activityId&score=$(shuf -i 15-50 -n 1)&type="
+    
+    #小流量博大奖
+    actId=$(curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile-h5/js/Flow_Purse/slot_machines.js | grep -E "params.actId" | head -n1 | cut -f2 -d"'")
+    sleep $(shuf -i 5-10 -n 1)
+    curl -sA "$UA" -b $workdir/cookie_qy "https://qy.chinaunicom.cn/mobile/lottery/doLo?enumType=new_turn_l&actId=$actId&level=10"
+    
+    #猪事顺利
+    sleep $(shuf -i 5-10 -n 1)
+    curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile/lottery/doLo?actId=1000000000121309
+    
+    #每日一运
+    sleep $(shuf -i 5-10 -n 1)
+    curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile/lottery/doLo?actId=1000000000012802
+}
+
 function main() {
     #sleep $(shuf -i 1-10800 -n 1)
     login
     membercenter
     wangzuan
     club
+    #qychinaunicom
     #openChg
     # clean
     rm -rf $workdir
