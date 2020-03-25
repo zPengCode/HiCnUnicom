@@ -140,12 +140,58 @@ function wangzuan() {
     echo wangzuan_status：$(curl -X POST -sA "$UA" -b $workdir/cookie_wz https://wangzuan.10010.com/api/activity/lottery)
 }
 
+function club() {
+    echo; echo; echo $(date) starting club...
+    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%406.0100"
+    curl -i -sLA "$UA" -b $workdir/cookie -c $workdir/cookie_cl --data "$data" "https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://club.10010.com/index.html" >$workdir/clubsign.log
+    ticket=$(cat $workdir/clubsign.log | grep -oE "ticket=\w*" | awk -F'[=]' '{print $2}')
+    data="ticket=$ticket&channel=woapp&accesstoken=$(date +%s%N | md5sum | head -c 23)"
+    accesstoken=$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "$data" https://club.10010.com/api/member/channellogin | grep -oE "accesstoken\":\"\w*" | awk -F'["]' '{print $3}')
+  
+    # sign
+    curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "accesstoken=$accesstoken" https://club.10010.com/api/member/sign
+    curl -X POST -sA "$UA" -b $workdir/cookie_cl -e "https://club.10010.com/index.html" -H 'content-type: application/json' --data "{}" -H "AuthToken: MEM_$accesstoken" https://club.10010.com/newactivity/unicom/cms/actobj/signin/signin
+	
+    # praise
+    list=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "accesstoken=$accesstoken" https://club.10010.com/api/pub/toplist/ | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}')))
+    data="page=1&order=&accesstoken=$accesstoken"
+    list_c=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "$data" "https://club.10010.com/api/pub/comments/${list[1]}" | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}')))
+    for((i = 1; i <= 4; i++)); do
+        echo praise_status_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=pub&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/${list[i]}) ; sleep 1
+        echo praise_comment_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=comment&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/${list_c[i]}) ; sleep 1
+    done
+
+    # view
+    parentcode=$(curl -i -sA "$UA" -b $workdir/cookie --data "accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/getselectsetting | grep -oE "\"data\":\"\w*" | awk -F'["]' '{print $NF}')
+    data="parentcode=$parentcode&accesstoken=$accesstoken"
+    list=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "$data" https://club.10010.com/api/pub/pubincollist | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}' | shuf)))
+    for((i = 1; i <= 6; i++)); do
+        echo view_status_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "accesstoken=$accesstoken" https://club.10010.com/api/pub/info/${list[i]} | grep -oE "\"code\":\w*" | awk -F'[:]' '{print $2}') ; sleep 1
+    done
+
+    # 其它任务
+    taskcode=$(cat $workdir/clubsign.log | grep -E "window.taskcode" | awk -F'[\"]' '{print $((NF-1))}')
+    membercode=($(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/getrecommendmem | grep -oE "\"code\":\"[^\"]*" | awk -F'[\"]' '{print $NF}' | head -n5 | tr '\n' ' '))
+    for((i = 0; i < ${#membercode[*]}; i++)); do
+        sleep $(shuf -i 3-5 -n 1)
+        curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "membercode=${membercode[i]}&accesstoken=$accesstoken" https://club.10010.com/api/japi/member/follow
+        sleep $(shuf -i 3-5 -n 1)
+	curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "membercode=${membercode[i]}&accesstoken=$accesstoken" https://club.10010.com/api/japi/member/cancelfollow
+    done
+    for((i = 0; i < 30; i++)); do
+        sleep $(shuf -i 3-5 -n 1)
+        curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "action=$i&target=&accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/actionrecord >/dev/null
+        sleep $(shuf -i 3-5 -n 1)
+	curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=$i&code=$taskcode&accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/completetask >/dev/null
+    done
+}
 
 function main() {
     #sleep $(shuf -i 1-10800 -n 1)
     login
     membercenter
     wangzuan
+    club
     #openChg
     # clean
     rm -rf $workdir
