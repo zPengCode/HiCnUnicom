@@ -11,4 +11,4 @@
 * 希望有大佬换个语言再搞几个版本，功能再多点  (沃之树 权益中心 各种抽奖等等)
 
 
-Telegram交流群:  https://t.me/HiCnUnicom  
+联通用户交流群:  https://t.me/HiCnUnicom  
