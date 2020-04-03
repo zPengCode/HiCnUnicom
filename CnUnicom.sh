@@ -161,9 +161,9 @@ function club() {
     list=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "accesstoken=$accesstoken" https://club.10010.com/api/pub/toplist/ | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}')))
     data="page=1&order=&accesstoken=$accesstoken"
     list_c=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "$data" "https://club.10010.com/api/pub/comments/${list[1]}" | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}')))
-    for((i = 1; i <= 4; i++)); do
+    for((i = 1; i <= 5; i++)); do
         echo praise_status_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=pub&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/${list[i]}) ; sleep 1
-        echo praise_comment_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=comment&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/${list_c[i]}) ; sleep 1
+        echo praise_comment_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=comment&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/ad0e472cf8b84be992b0f008c5e2721c) ; sleep 1
     done
 
     # view
