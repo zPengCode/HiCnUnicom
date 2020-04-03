@@ -50,6 +50,7 @@ function urlencode() {
     done
 }
 
+# 登录失败尝试修改以下这个appId的值为抓包获取的登录过的联通app
 function login() {
     rsaencrypt
     cat > $workdir/signdata <<-EOF
