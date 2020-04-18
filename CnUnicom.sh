@@ -12,10 +12,10 @@ alias curl='curl -m 10'
 username="$1"
 password="$2"
 
-# 联通app版本
+# 联通APP版本
 unicom_version=7.0301
 
-# UA and deviceId: if you failed to login , maybe you need to change it to your IMEI.
+# deviceId: 随机IMEI
 deviceId=$(shuf -i 123456789012345-987654321012345 -n 1)
 
 # 安卓手机端APP登录过的使用这个UA
@@ -90,7 +90,7 @@ EOF
 }
 
 function openChg() {
-    # openChg for dingding 1 time each month. Just for me!
+    # 每月一号办理解除40G封顶业务
     [[ $(date "+%d") -eq 1 ]] || return 0
     echo; echo $(date) starting dingding OpenChg...
     curl -sA "$UA" -b $workdir/cookie --data "querytype=02&opertag=0" "https://m.client.10010.com/mobileService/businessTransact/serviceOpenCloseChg.htm" >/dev/null
@@ -115,6 +115,15 @@ function membercenter() {
     for((i = 0; i <= ${#NewsListId[*]}; i++)); do
         curl -X POST -sA "$UA" -b $workdir/cookie --data "pointChannel=01&pointType=02&reqChannel=quickNews&reqId=${NewsListId[i]}" https://m.client.10010.com/commentSystem/csPraise
         curl -X POST -sA "$UA" -b $workdir/cookie --data "pointChannel=01&pointType=01&reqChannel=quickNews&reqId=${NewsListId[i]}" https://m.client.10010.com/commentSystem/csPraise | grep -oE "growScore\":\"0\"" >/dev/null && break
+    done
+	
+	#文章评论
+    newsTitle="$(curl -X POST -sA "$UA" -b $workdir/cookie --data "newsId=${NewsListId[1]}&reqChannel=quickNews&isClientSide=0&pageFrom=newsList" -e "$Referer" https://m.client.10010.com/commentSystem/getNewsDetails | grep -oE "mainTitle\":\"[^\"]*" | awk -F[\"] '{print $NF}')"
+    subTitle="$(curl -X POST -sA "$UA" -b $workdir/cookie --data "newsId=${NewsListId[1]}&reqChannel=quickNews&isClientSide=0&pageFrom=newsList" -e "$Referer" https://m.client.10010.com/commentSystem/getNewsDetails | grep -oE "subTitle\":\"[^\"]*" | awk -F[\"] '{print $NF}')"
+    for((i = 0; i <= 5; i++)); do
+        data="id=${NewsListId[1]}&newsTitle=$(urlencode $newsTitle)&commentContent=$RANDOM&upLoadImgName=&reqChannel=quickNews&subTitle=$(urlencode $subTitle)&belongPro=098"
+        mycomtId="$(curl -X POST -sA "$UA" -b $workdir/cookie --data "$data" -e "$Referer" https://m.client.10010.com/commentSystem/saveComment | grep -oE "id\":\"[^\"]*" | awk -F[\"] '{print $NF}')"
+        curl -X POST -sA "$UA" -b $workdir/cookie --data "type=01&reqId=$mycomtId&reqChannel=quickNews" -e "$Referer" https://m.client.10010.com/commentSystem/delDynamic
     done
     
     #账单查询
@@ -146,98 +155,11 @@ function membercenter() {
     echo goldTotal：$(curl -sA "$UA" -b $workdir/cookie.SigninActivity "https://act.10010.com/SigninApp/signin/goldTotal.do")
 }
 
-function wangzuan() {
-    # wangzuan: 1 time free each month.
-    [[ $(date "+%d") -eq 1 ]] || return 0
-    echo; echo $(date) starting wangzuan...
-    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%40$unicom_version"
-    curl -L -sA "$UA" -b $workdir/cookie -c $workdir/cookie_wz --data "$data" "https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://wangzuan.10010.com/api/auth/login?source=2" >/dev/null
-    echo wangzuan_status：$(curl -X POST -sA "$UA" -b $workdir/cookie_wz https://wangzuan.10010.com/api/activity/lottery)
-}
-
-function club() {
-    echo; echo; echo $(date) starting club...
-    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%40$unicom_version"
-    curl -i -sLA "$UA" -b $workdir/cookie -c $workdir/cookie_cl --data "$data" "https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://club.10010.com/index.html" >$workdir/clubsign.log
-    ticket=$(cat $workdir/clubsign.log | grep -oE "ticket=\w*" | awk -F'[=]' '{print $2}')
-    data="ticket=$ticket&channel=woapp&accesstoken=$(date +%s%N | md5sum | head -c 23)"
-    accesstoken=$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "$data" https://club.10010.com/api/member/channellogin | grep -oE "accesstoken\":\"\w*" | awk -F'["]' '{print $3}')
-  
-    # sign
-    curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "accesstoken=$accesstoken" https://club.10010.com/api/member/sign
-    curl -X POST -sA "$UA" -b $workdir/cookie_cl -e "https://club.10010.com/index.html" -H 'content-type: application/json' --data "{}" -H "AuthToken: MEM_$accesstoken" https://club.10010.com/newactivity/unicom/cms/actobj/signin/signin
-	
-    # praise
-    list=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "accesstoken=$accesstoken" https://club.10010.com/api/pub/toplist/ | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}')))
-    data="page=1&order=&accesstoken=$accesstoken"
-    list_c=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "$data" "https://club.10010.com/api/pub/comments/${list[1]}" | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}')))
-    for((i = 1; i <= 5; i++)); do
-        echo praise_status_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=pub&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/${list[i]}) ; sleep 1
-        echo praise_comment_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=comment&accesstoken=$accesstoken" https://club.10010.com/api/pub/praise/ad0e472cf8b84be992b0f008c5e2721c) ; sleep 1
-    done
-
-    # view
-    parentcode=$(curl -i -sA "$UA" -b $workdir/cookie --data "accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/getselectsetting | grep -oE "\"data\":\"\w*" | awk -F'["]' '{print $NF}')
-    data="parentcode=$parentcode&accesstoken=$accesstoken"
-    list=($(echo $(curl -i -sA "$UA" -b $workdir/cookie --data "$data" https://club.10010.com/api/pub/pubincollist | grep -oE "\"code\":\"\w*" | awk -F'["]' '{print $NF}' | shuf)))
-    for((i = 1; i <= 6; i++)); do
-        echo view_status_$i：$(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "accesstoken=$accesstoken" https://club.10010.com/api/pub/info/${list[i]} | grep -oE "\"code\":\w*" | awk -F'[:]' '{print $2}') ; sleep 1
-    done
-
-    # 其它任务
-    taskcode=$(cat $workdir/clubsign.log | grep -E "window.taskcode" | awk -F'[\"]' '{print $((NF-1))}')
-    membercode=($(curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/getrecommendmem | grep -oE "\"code\":\"[^\"]*" | awk -F'[\"]' '{print $NF}' | head -n5 | tr '\n' ' '))
-    for((i = 0; i < ${#membercode[*]}; i++)); do
-        sleep $(shuf -i 3-5 -n 1)
-        curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "membercode=${membercode[i]}&accesstoken=$accesstoken" https://club.10010.com/api/japi/member/follow
-        sleep $(shuf -i 3-5 -n 1)
-	curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "membercode=${membercode[i]}&accesstoken=$accesstoken" https://club.10010.com/api/japi/member/cancelfollow
-    done
-    for((i = 0; i < 30; i++)); do
-        sleep $(shuf -i 3-5 -n 1)
-        curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "action=$i&target=&accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/actionrecord >/dev/null
-        sleep $(shuf -i 3-5 -n 1)
-	curl -X POST -sA "$UA" -b $workdir/cookie_cl --data "type=$i&code=$taskcode&accesstoken=$accesstoken" https://club.10010.com/api/japi/portal/completetask >/dev/null
-    done
-}
-
-function qychinaunicom() {
-    echo; echo $(date) starting qychinaunicom...
-    data="yw_code=&desmobile=$username&version=android%40$unicom_version"
-    curl -i -sLA "$UA" -b $workdir/cookie -c $workdir/cookie_qy --data "$data" https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://qy.chinaunicom.cn/mobile/auth/index >$workdir/qychinaunicom.log
-    ticket=$(cat $workdir/qychinaunicom.log | grep -oE "ticket=\w*" | awk -F'[=]' '{print $2}' | head -n1)
-    curl -sA "$UA" -b $workdir/cookie_qy -c $workdir/cookie_qy --data "ecsTicket=$ticket" https://qy.chinaunicom.cn/mobile/auth/auth >/dev/null
-    
-    #签到
-    curl -sA "$UA" -b $workdir/cookie_qy "https://qy.chinaunicom.cn/mobile/actsign/queryAccSign?day=$(date +%Y%m)"
-    
-    #红包雨
-    activityId=$(curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile-h5/js/redPackageRain/redRain.js | grep -E "var activityId" | grep -oE "[0-9]*")
-    sleep $(shuf -i 5-10 -n 1)
-    curl -sA "$UA" -b $workdir/cookie_qy "https://qy.chinaunicom.cn/mobile/lottery/doLo?actId=$activityId&score=$(shuf -i 15-50 -n 1)&type="
-    
-    #小流量博大奖
-    actId=$(curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile-h5/js/Flow_Purse/slot_machines.js | grep -E "params.actId" | head -n1 | cut -f2 -d"'")
-    sleep $(shuf -i 5-10 -n 1)
-    curl -sA "$UA" -b $workdir/cookie_qy "https://qy.chinaunicom.cn/mobile/lottery/doLo?enumType=new_turn_l&actId=$actId&level=10"
-    
-    #猪事顺利
-    sleep $(shuf -i 5-10 -n 1)
-    curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile/lottery/doLo?actId=1000000000121309
-    
-    #每日一运
-    sleep $(shuf -i 5-10 -n 1)
-    curl -sA "$UA" -b $workdir/cookie_qy https://qy.chinaunicom.cn/mobile/lottery/doLo?actId=1000000000012802
-}
-
 function main() {
     #sleep $(shuf -i 1-10800 -n 1)
     login
     membercenter
-    wangzuan
-    club
-    #qychinaunicom
-    #openChg
+    openChg
     #rm -rf $workdir
     echo; echo $(date) $username Accomplished.  Thanks!
 }
