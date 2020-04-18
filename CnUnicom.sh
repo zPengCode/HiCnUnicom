@@ -127,7 +127,7 @@ function membercenter() {
     done
     
     #账单查询
-    if [[ $(date | awk '{print $3}') -eq 1 ]]; then
+    if [[ $(date "+%d") -eq 1 ]]; then
         curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.HistoryBill --data "desmobile=$username&version=android@$unicom_version" "https://m.client.10010.com/mobileService/common/skip/queryHistoryBill.htm?mobile_c_from=home" >/dev/null
         curl -sLA "$UA" -b $workdir/cookie.HistoryBill --data "operateType=0&bizCode=1000210003&height=889&width=480" "https://m.client.10010.com/mobileService/query/querySmartBizNew.htm?" >/dev/null
         curl -sLA "$UA" -b $workdir/cookie.HistoryBill --data "systemCode=CLIENT&transId=&userNumber=$username&taskCode=TA52554375&finishTime=$(date +%Y%m%d%H%M%S)" "https://act.10010.com/signinAppH/limitTask/limitTime" >/dev/null
