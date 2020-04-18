@@ -12,11 +12,14 @@ alias curl='curl -m 10'
 username="$1"
 password="$2"
 
+# 联通app版本
+unicom_version=7.0301
+
 # UA and deviceId: if you failed to login , maybe you need to change it to your IMEI.
 deviceId=$(shuf -i 123456789012345-987654321012345 -n 1)
 
 # 安卓手机端APP登录过的使用这个UA
-UA="Mozilla/5.0 (Linux; Android 6.0.1; oneplus a5010 Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/52.0.2743.100 Mobile Safari/537.36; unicom{version:android@6.0100,desmobile:$username};devicetype{deviceBrand:Oneplus,deviceModel:oneplus a5010}"
+UA="Mozilla/5.0 (Linux; Android 6.0.1; oneplus a5010 Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/52.0.2743.100 Mobile Safari/537.36; unicom{version:android@$unicom_version,desmobile:$username};devicetype{deviceBrand:Oneplus,deviceModel:oneplus a5010}"
 
 # 苹果手机端APP登录过的使用这个UA
 #UA="ChinaUnicom4.x/176 CFNetwork/1121.2.2 Darwin/19.2.0"
@@ -67,17 +70,23 @@ isRemberPwd=true
 &deviceBrand=Oneplus
 &pip=10.0.$(shuf -i 1-255 -n 1).$(shuf -i 1-255 -n 1)
 &provinceChanel=general
-&version=android%406.0100
+&version=android%40$unicom_version
 &deviceModel=oneplus%20a5010
 &deviceOS=android6.0.1
 &deviceCode=$deviceId
 EOF
 
     # cookie
-    curl -sA "$UA" -D $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm" >/dev/null
-    curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "http://m.client.10010.com/mobileService/login.htm" >/dev/null
-    token=$(cat $workdir/cookie | grep -E "a_token" | awk  '{print $7}')
-    [[ "$token" = "" ]] && echo "Error, login failed." && echo "cmd for clean: rm -rf $workdir" && exit 1
+	curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=18593283597&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
+	[[ $status == 0 ]] && echo cookies登录$username成功
+	
+	if [[ $status == 1 ]]; then
+		curl -sA "$UA" -D $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm" >/dev/null
+		curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "http://m.client.10010.com/mobileService/login.htm" >/dev/null
+		token=$(cat $workdir/cookie | grep -E "a_token" | awk  '{print $7}')
+		[[ "$token" = "" ]] && echo "Error, login failed." && echo "cmd for clean: rm -rf $workdir" && exit 1
+		echo 密码登录$username成功
+	fi
 }
 
 function openChg() {
@@ -110,7 +119,7 @@ function membercenter() {
     
     #账单查询
     if [[ $(date | awk '{print $3}') -eq 1 ]]; then
-        curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.HistoryBill --data "desmobile=$username&version=android@7.0000" "https://m.client.10010.com/mobileService/common/skip/queryHistoryBill.htm?mobile_c_from=home" >/dev/null
+        curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.HistoryBill --data "desmobile=$username&version=android@$unicom_version" "https://m.client.10010.com/mobileService/common/skip/queryHistoryBill.htm?mobile_c_from=home" >/dev/null
         curl -sLA "$UA" -b $workdir/cookie.HistoryBill --data "operateType=0&bizCode=1000210003&height=889&width=480" "https://m.client.10010.com/mobileService/query/querySmartBizNew.htm?" >/dev/null
         curl -sLA "$UA" -b $workdir/cookie.HistoryBill --data "systemCode=CLIENT&transId=&userNumber=$username&taskCode=TA52554375&finishTime=$(date +%Y%m%d%H%M%S)" "https://act.10010.com/signinAppH/limitTask/limitTime" >/dev/null
     fi
@@ -141,14 +150,14 @@ function wangzuan() {
     # wangzuan: 1 time free each month.
     [[ $(date "+%d") -eq 1 ]] || return 0
     echo; echo $(date) starting wangzuan...
-    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%406.0100"
+    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%40$unicom_version"
     curl -L -sA "$UA" -b $workdir/cookie -c $workdir/cookie_wz --data "$data" "https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://wangzuan.10010.com/api/auth/login?source=2" >/dev/null
     echo wangzuan_status：$(curl -X POST -sA "$UA" -b $workdir/cookie_wz https://wangzuan.10010.com/api/activity/lottery)
 }
 
 function club() {
     echo; echo; echo $(date) starting club...
-    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%406.0100"
+    data="timestamp=$(date +%Y%m%d%H%M%S)&desmobile=$username&version=android%40$unicom_version"
     curl -i -sLA "$UA" -b $workdir/cookie -c $workdir/cookie_cl --data "$data" "https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://club.10010.com/index.html" >$workdir/clubsign.log
     ticket=$(cat $workdir/clubsign.log | grep -oE "ticket=\w*" | awk -F'[=]' '{print $2}')
     data="ticket=$ticket&channel=woapp&accesstoken=$(date +%s%N | md5sum | head -c 23)"
@@ -194,7 +203,7 @@ function club() {
 
 function qychinaunicom() {
     echo; echo $(date) starting qychinaunicom...
-    data="yw_code=&desmobile=$username&version=android%406.0100"
+    data="yw_code=&desmobile=$username&version=android%40$unicom_version"
     curl -i -sLA "$UA" -b $workdir/cookie -c $workdir/cookie_qy --data "$data" https://m.client.10010.com/mobileService/openPlatform/openPlatLine.htm?to_url=https://qy.chinaunicom.cn/mobile/auth/index >$workdir/qychinaunicom.log
     ticket=$(cat $workdir/qychinaunicom.log | grep -oE "ticket=\w*" | awk -F'[=]' '{print $2}' | head -n1)
     curl -sA "$UA" -b $workdir/cookie_qy -c $workdir/cookie_qy --data "ecsTicket=$ticket" https://qy.chinaunicom.cn/mobile/auth/auth >/dev/null
@@ -229,9 +238,7 @@ function main() {
     club
     #qychinaunicom
     #openChg
-    # clean
-    rm -rf $workdir
-    # exit
+    #rm -rf $workdir
     echo; echo $(date) $username Accomplished.  Thanks!
 }
 
