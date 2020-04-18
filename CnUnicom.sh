@@ -77,16 +77,16 @@ isRemberPwd=true
 EOF
 
     # cookie
-	curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=18593283597&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
-	[[ $status == 0 ]] && echo cookies登录$username成功
+    curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=18593283597&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
+    [[ $status == 0 ]] && echo cookies登录$username成功
 	
-	if [[ $status == 1 ]]; then
-		curl -sA "$UA" -D $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm" >/dev/null
-		curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "http://m.client.10010.com/mobileService/login.htm" >/dev/null
-		token=$(cat $workdir/cookie | grep -E "a_token" | awk  '{print $7}')
-		[[ "$token" = "" ]] && echo "Error, login failed." && echo "cmd for clean: rm -rf $workdir" && exit 1
-		echo 密码登录$username成功
-	fi
+    if [[ $status == 1 ]]; then
+        curl -sA "$UA" -D $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm" >/dev/null
+        curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "http://m.client.10010.com/mobileService/login.htm" >/dev/null
+        token=$(cat $workdir/cookie | grep -E "a_token" | awk  '{print $7}')
+        [[ "$token" = "" ]] && echo "Error, login failed." && echo "cmd for clean: rm -rf $workdir" && exit 1
+        echo 密码登录$username成功
+    fi
 }
 
 function openChg() {
