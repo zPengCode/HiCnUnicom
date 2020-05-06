@@ -135,12 +135,11 @@ function membercenter() {
     
     #签到
     Referer="https://img.client.10010.com/activitys/member/index.html"
-    curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.SigninActivity -e "$Referer" https://act.10010.com/SigninApp/signin/querySigninActivity.htm >/dev/null
-    Referer="https://act.10010.com/SigninApp/signin/querySigninActivity.htm"
-    curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/rewardReminder.do?vesion=0.$(shuf -i 1234567890123456-9876543210654321 -n 1)" >/dev/null
-    curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -e "$Referer" --data "className=signinIndex" https://act.10010.com/SigninApp/signin/daySign.do
-    curl -sA "$UA" -b $workdir/cookie.SigninActivity --data "transId=$(date +%Y%m%d%H%M%S)$(shuf -i 0-9 -n 1).$(shuf -i 123456789012345-987654321012345 -n 1)&userNumber=$username&taskCode=TA590934984&finishTime=$(date +%Y%m%d%H%M%S)&taskType=DAILY_TASK" https://act.10010.com/signinAppH/commonTask
-    
+	data="yw_code=&desmobile=$username&version=android@$unicom_version"
+    curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/querySigninActivity.htm?$data" >/dev/null
+    Referer="https://act.10010.com/SigninApp/signin/querySigninActivity.htm?$data"
+    curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/daySign?vesion=0.$(shuf -i 1234567890123456-9876543210654321 -n 1)"
+	
     ##获取金币
     for((i = 0; i <= ${#NewsListId[*]}; i++)); do
         curl -sA "$UA" -b $workdir/cookie --data "newsId=$(echo "ff808081695a52b1016"$(date +%s%N | md5sum | head -c 13))" "http://m.client.10010.com/mobileService/customer/quickNews/shareSuccess.htm" | grep -oE "jbCount\":\"\"" >/dev/null && break
@@ -152,7 +151,7 @@ function membercenter() {
         [[ $i -gt 3 ]] && curl -sA "$UA" -b $workdir/cookie.SigninActivity --data "goldnumber=10&banrate=10&usernumberofjsp=$usernumberofjsp" https://m.client.10010.com/dailylottery/static/doubleball/duihuan >/dev/null; sleep 1
         curl -sA "$UA" -b $workdir/cookie.SigninActivity --data "usernumberofjsp=$usernumberofjsp" https://m.client.10010.com/dailylottery/static/doubleball/choujiang | grep -oE "用户机会次数不足" >/dev/null && break
     done
-    echo goldTotal：$(curl -sA "$UA" -b $workdir/cookie.SigninActivity "https://act.10010.com/SigninApp/signin/goldTotal.do")
+    echo; echo goldTotal：$(curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/getGoldTotal?vesion=0.$(shuf -i 1234567890123456-9876543210654321 -n 1)")
 }
 
 function main() {
