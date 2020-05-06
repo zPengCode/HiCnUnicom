@@ -79,7 +79,7 @@ EOF
     # cookie
     curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=18593283597&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
     [[ $status == 0 ]] && echo cookies登录$username成功
-	
+    
     if [[ $status == 1 ]]; then
         curl -sA "$UA" -D $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm" >/dev/null
         curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "http://m.client.10010.com/mobileService/login.htm" >/dev/null
@@ -116,7 +116,7 @@ function membercenter() {
         curl -X POST -sA "$UA" -b $workdir/cookie --data "pointChannel=01&pointType=02&reqChannel=quickNews&reqId=${NewsListId[i]}" https://m.client.10010.com/commentSystem/csPraise
         curl -X POST -sA "$UA" -b $workdir/cookie --data "pointChannel=01&pointType=01&reqChannel=quickNews&reqId=${NewsListId[i]}" https://m.client.10010.com/commentSystem/csPraise | grep -oE "growScore\":\"0\"" >/dev/null && break
     done
-	
+    
     #文章评论
     newsTitle="$(curl -X POST -sA "$UA" -b $workdir/cookie --data "newsId=${NewsListId[1]}&reqChannel=quickNews&isClientSide=0&pageFrom=newsList" -e "$Referer" https://m.client.10010.com/commentSystem/getNewsDetails | grep -oE "mainTitle\":\"[^\"]*" | awk -F[\"] '{print $NF}')"
     subTitle="$(curl -X POST -sA "$UA" -b $workdir/cookie --data "newsId=${NewsListId[1]}&reqChannel=quickNews&isClientSide=0&pageFrom=newsList" -e "$Referer" https://m.client.10010.com/commentSystem/getNewsDetails | grep -oE "subTitle\":\"[^\"]*" | awk -F[\"] '{print $NF}')"
@@ -135,11 +135,11 @@ function membercenter() {
     
     #签到
     Referer="https://img.client.10010.com/activitys/member/index.html"
-	data="yw_code=&desmobile=$username&version=android@$unicom_version"
+    data="yw_code=&desmobile=$username&version=android@$unicom_version"
     curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/querySigninActivity.htm?$data" >/dev/null
     Referer="https://act.10010.com/SigninApp/signin/querySigninActivity.htm?$data"
     curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/daySign?vesion=0.$(shuf -i 1234567890123456-9876543210654321 -n 1)"
-	
+    
     ##获取金币
     for((i = 0; i <= ${#NewsListId[*]}; i++)); do
         curl -sA "$UA" -b $workdir/cookie --data "newsId=$(echo "ff808081695a52b1016"$(date +%s%N | md5sum | head -c 13))" "http://m.client.10010.com/mobileService/customer/quickNews/shareSuccess.htm" | grep -oE "jbCount\":\"\"" >/dev/null && break
@@ -152,6 +152,16 @@ function membercenter() {
         curl -sA "$UA" -b $workdir/cookie.SigninActivity --data "usernumberofjsp=$usernumberofjsp" https://m.client.10010.com/dailylottery/static/doubleball/choujiang | grep -oE "用户机会次数不足" >/dev/null && break
     done
     echo; echo goldTotal：$(curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -e "$Referer" "https://act.10010.com/SigninApp/signin/getGoldTotal?vesion=0.$(shuf -i 1234567890123456-9876543210654321 -n 1)")
+    
+    #沃之树浇水
+    curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -c $workdir/cookie.wotree --data "thirdUrl=https%3A%2F%2Fimg.client.10010.com%2Fmactivity%2FwoTree%2Findex.html%23%2F" https://m.client.10010.com/mobileService/customer/getShareRedisInfo.htm >/dev/null
+    Referer="https://img.client.10010.com/mactivity/woTree/index.html"
+    curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/mailb/isNewLetter.htm >/dev/null
+    curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/task/bord.htm >/dev/null
+    curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/arbordayJson/index.htm >/dev/null
+    curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/arbordayJson/getChanceByIndex.htm?index=0 >/dev/null
+    curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/stealingEnergy/engerSign.htm >/dev/null
+    curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/arbordayJson/arbor/3/0/3/grow.htm
 }
 
 function main() {
