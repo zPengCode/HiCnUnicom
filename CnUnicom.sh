@@ -91,7 +91,7 @@ EOF
 
 function openChg() {
     # 每月一号办理解除40G封顶业务
-    [[ $(date "+%d") -eq 1 ]] || return 0
+    [[ "$(date "+%d")" == "01" ]] || return 0
     echo; echo $(date) starting dingding OpenChg...
     curl -sA "$UA" -b $workdir/cookie --data "querytype=02&opertag=0" "https://m.client.10010.com/mobileService/businessTransact/serviceOpenCloseChg.htm" >/dev/null
 }
@@ -127,7 +127,7 @@ function membercenter() {
     done
     
     #每月一次账单查询
-    if [[ $(date "+%d") -eq 1 ]]; then
+    if [[ "$(date "+%d")" == "01" ]]; then
         curl -sLA "$UA" -b $workdir/cookie -c $workdir/cookie.HistoryBill --data "yw_code=&desmobile=$username&version=android@$unicom_version" "https://m.client.10010.com/mobileService/common/skip/queryHistoryBill.htm?mobile_c_from=home" >/dev/null
         curl -sLA "$UA" -b $workdir/cookie.HistoryBill --data "operateType=0&bizCode=1000210003&height=889&width=480" "https://m.client.10010.com/mobileService/query/querySmartBizNew.htm?" >/dev/null
         curl -sLA "$UA" -b $workdir/cookie.HistoryBill --data "systemCode=CLIENT&transId=&userNumber=$username&taskCode=TA52554375&finishTime=$(date +%Y%m%d%H%M%S)" "https://act.10010.com/signinAppH/limitTask/limitTime" >/dev/null
