@@ -170,7 +170,7 @@ function main() {
     #sleep $(shuf -i 1-10800 -n 1)
     login
     membercenter
-    openChg
+    #openChg
     #rm -rf $workdir
     echo; echo $(date) $username Accomplished.  Thanks!
 }
