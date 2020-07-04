@@ -13,7 +13,7 @@ username="$1"
 password="$2"
 
 # 联通APP版本
-unicom_version=7.0301
+unicom_version=7.0402
 
 # deviceId: 随机IMEI
 deviceId=$(shuf -i 123456789012345-987654321012345 -n 1)
@@ -63,7 +63,7 @@ isRemberPwd=true
 &simCount=0
 &netWay=Wifi
 &mobile=$(urlencode $crypt_username)
-&yw_code: 
+&yw_code=
 &timestamp=$(date +%Y%m%d%H%M%S)
 &appId=db5c52929cc2d7f5c46272487e926aebfb82b3bad6b9cd07f1eb99b6a6f34a90
 &keyVersion=1
@@ -77,12 +77,12 @@ isRemberPwd=true
 EOF
 
     # cookie
-    curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=18593283597&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
+    curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=$username&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
     [[ $status == 0 ]] && echo cookies登录$username成功
     
     if [[ $status == 1 ]]; then
-        curl -sA "$UA" -D $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm" >/dev/null
-        curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "http://m.client.10010.com/mobileService/login.htm" >/dev/null
+        curl -X POST -sA "$UA" -c $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm?&desmobile=$username&version=android%40$unicom_version" >/dev/null
+        curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "https://m.client.10010.com/mobileService/login.htm" >/dev/null
         token=$(cat $workdir/cookie | grep -E "a_token" | awk  '{print $7}')
         [[ "$token" = "" ]] && echo "Error, login failed." && echo "cmd for clean: rm -rf $workdir" && exit 1
         echo 密码登录$username成功
