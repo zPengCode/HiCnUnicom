@@ -9,7 +9,8 @@
 * 其它功能请自行抓包添加，欢迎Pr
 
 * 希望有大佬换个语言再搞几个版本，功能再多点  (沃之树 权益中心 各种抽奖等等，不过功能越多越难维护！！！)  
-> UnicomGetCoin.py版本使用说明  
+  
+> [**UnicomGetCoin.py版本使用说明**](https://github.com/mixool/HiCnUnicom/blob/master/tutorial/UnicomAutoGetCoin_py_readme.md)
   
 联通用户交流群:  https://t.me/HiCnUnicom  
 
