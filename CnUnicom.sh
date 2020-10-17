@@ -159,7 +159,6 @@ function membercenter() {
     echo; curl -sA "$UA" -b $workdir/cookie.SigninActivity --data "usernumberofjsp=$usernumberofjsp" http://m.client.10010.com/dailylottery/static/integral/choujiang
     
     #沃之树浇水
-    echo; echo woTree...
     curl -X POST -sA "$UA" -b $workdir/cookie.SigninActivity -c $workdir/cookie.wotree --data "thirdUrl=https%3A%2F%2Fimg.client.10010.com%2Fmactivity%2FwoTree%2Findex.html%23%2F" https://m.client.10010.com/mobileService/customer/getShareRedisInfo.htm >/dev/null
     Referer="https://img.client.10010.com/mactivity/woTree/index.html"
     curl -X POST -sA "$UA" -b $workdir/cookie.wotree -c $workdir/cookie.wotree -e "$Referer" https://m.client.10010.com/mactivity/mailb/isNewLetter.htm >/dev/null
