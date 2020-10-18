@@ -58,7 +58,7 @@ class Qiandao():
         data2={'stepflag':'22'}
         data3={'stepflag':'23'}
         for x in range(3):
-        	r = urllib2.Request("http://act.10010.com/SigninApp/mySignin/addFlow",data=data2)
+            r = urllib2.Request("http://act.10010.com/SigninApp/mySignin/addFlow",data=data2)
             r = urllib2.Request("http://act.10010.com/SigninApp/mySignin/addFlow",data=data3)
             
         	
