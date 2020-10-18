@@ -56,8 +56,11 @@ class Qiandao():
         req5 = urllib2.Request("https://act.10010.com/SigninApp/signin/getIntegral")
         print( ' coin: ' + urllib2.urlopen(req5).read().decode('utf-8'))
         data2={'stepflag':'22'}
+        data3={'stepflag':'23'}
         for x in range(3):
         	r = urllib2.Request("http://act.10010.com/SigninApp/mySignin/addFlow",data=data2)
+            r = urllib2.Request("http://act.10010.com/SigninApp/mySignin/addFlow",data=data3)
+            
         	
 if __name__ == '__main__':
 
