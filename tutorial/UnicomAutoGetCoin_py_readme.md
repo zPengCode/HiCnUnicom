@@ -11,17 +11,13 @@
 
         只需下载py文件，将py文件倒数第二行引号中的内容按照提示抓包替换即可。
   
-  ~~二、利用github的workflow自动运行~~
-
-   ~~首先fork该项目，然后按照 “一、”中的操作抓包修改py文件~~
-  
-   ~~接着前往.github/workflows/AutoRun.yml文件中第26行的网址改为你fork之后的git网址~~
+  二、利用github的workflow自动运行
    
-   如需使用该方法，请前往https://github.com/QiuYueBaiJXW
+        如需使用该方法，请前往https://github.com/QiuYueBaiJXW/UnicomGetCoin
  
  #抓包方法及内容
     
-    开启抓包软件，登录手机营业厅
+    退出手机营业厅登录，然后开启抓包软件，登录手机营业厅
     
     查找网址为 https://m.client.10010.com/mobileService/login.htm 的记录，找到请求内容将reqtime后面的内容按要求填入py文件。
     
