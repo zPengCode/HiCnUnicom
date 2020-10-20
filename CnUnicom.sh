@@ -25,7 +25,7 @@ UA="Mozilla/5.0 (Linux; Android 6.0.1; oneplus a5010 Build/V417IR; wv) AppleWebK
 #UA="ChinaUnicom4.x/176 CFNetwork/1121.2.2 Darwin/19.2.0"
 
 # workdir
-workdir="/root/CnUnicom_$username"
+workdir="/var/log/CnUnicom_$username"
 [[ ! -d "$workdir" ]] && mkdir $workdir
 
 function rsaencrypt() {
