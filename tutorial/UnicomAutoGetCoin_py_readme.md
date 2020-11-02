@@ -38,7 +38,7 @@
  
  #感谢
     
-    @mixool
+   [@mixool](https://github.com/mixool/)
     
     感谢@mixool将py版本纳入其中，sh版本的其他功能列入无限期 To do
     
