@@ -2,6 +2,7 @@
 作者： https://github.com/QiuYueBaiJXW
 
 #联通营业厅签到领积分
+
 #新增七日4GB流量包获取
 
 
@@ -13,7 +14,7 @@
   
   二、利用github的workflow自动运行
    
-        如需使用该方法，请前往https://github.com/QiuYueBaiJXW/UnicomGetCoin
+   如需使用该方法，请前往[url](https://github.com/QiuYueBaiJXW/UnicomGetCoin)
  
  #抓包方法及内容
     
