@@ -20,7 +20,7 @@
     
     退出手机营业厅登录，然后开启抓包软件，登录手机营业厅
     
-    查找网址为 https://m.client.10010.com/mobileService/login.htm 的记录，找到请求内容将reqtime后面的内容按要求填入py文件。
+    查找网址为 https://m.client.10010.com/mobileService/login.htm 的记录，找到请求内容，将&sim开始到最后的内容按要求填入py文件。
     
     具体内容见下图
     
