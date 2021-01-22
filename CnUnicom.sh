@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
-PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
-export PATH
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin && export PATH
 # Usage:
-## wget --no-check-certificate https://raw.githubusercontent.com/mixool/HiCnUnicom/master/CnUnicom.sh && chmod +x CnUnicom.sh && bash CnUnicom.sh 
-### bash <(curl -s https://raw.githubusercontent.com/mixool/HiCnUnicom/master/CnUnicom.sh) ${username} ${password}
+## wget --no-check-certificate https://raw.githubusercontent.com/mixool/HiCnUnicom/master/CnUnicom.sh && chmod +x CnUnicom.sh && bash CnUnicom.sh 13800008888@112233 18388880000@123456
+### bash <(curl -s https://raw.githubusercontent.com/mixool/HiCnUnicom/master/CnUnicom.sh) 13800008888@112233 18388880000@123456
 
-# alias curl
-alias curl='curl -m 10'
+# 传入参数格式，支持多账号，手机号@密码必需：13800008888@112233 18388880000@123456
+[[ $# != 0 ]] && all_parameter=($(echo $@)) || { echo 'Err  !!! Useage: bash this_script.sh 13800008888@112233 18388880000@123456'; exit 1; }
+all_username_password=($(echo ${all_parameter[*]} | grep -oE "[0-9]{11}@[0-9]{6}"| sort -u | tr "\n" " "))
 
-# user info: change them to yours or use parameters instead.
-username="$1"
-password="$2"
+# 登录失败尝试修改以下这个appId的值为抓包获取的登录过的联通app,也可使用传入参数 appId@*************
+appId=247b001385de5cc6ce11731ba1b15835313d489d604e58280e455a6c91e5058651acfb0f0b77029c2372659c319e02645b54c0acc367e692ab24a546b83c302d
+echo ${all_parameter[*]} | grep -qE "appId@[a-z0-9]+" && appId=$(echo ${all_parameter[*]} | grep -oE "appId@[a-z0-9]+" | cut -f2 -d@)
+
+# deviceId: 随机IMEI,也可使用传入参数 deviceId@*************
+deviceId=$(shuf -i 123456789012345-987654321012345 -n 1)
+echo ${all_parameter[*]} | grep -qE "deviceId@[0-9]+" && deviceId=$(echo ${all_parameter[*]} | grep -oE "deviceId@[0-9]+" | cut -f2 -d@)
 
 # 联通APP版本
 unicom_version=8.0100
 
-# deviceId: 随机IMEI
-deviceId=$(shuf -i 123456789012345-987654321012345 -n 1)
-
-# 安卓手机端APP登录过的使用这个UA
+# UA
 UA="Mozilla/5.0 (Linux; Android 6.0.1; oneplus a5010 Build/V417IR; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/52.0.2743.100 Mobile Safari/537.36; unicom{version:android@$unicom_version,desmobile:$username};devicetype{deviceBrand:Oneplus,deviceModel:oneplus a5010}"
 
-# 苹果手机端APP登录过的使用这个UA
-#UA="ChinaUnicom4.x/176 CFNetwork/1121.2.2 Darwin/19.2.0"
+# alias curl
+alias curl='curl -m 10'
 
-# workdir
-workdir="/var/log/CnUnicom_$username"
-[[ ! -d "$workdir" ]] && mkdir $workdir
-
+################################################################
 function rsaencrypt() {
     cat > $workdir/rsa_public.key <<-EOF
 -----BEGIN PUBLIC KEY-----
@@ -53,8 +51,7 @@ function urlencode() {
     done
 }
 
-# 登录失败尝试修改以下这个appId的值为抓包获取的登录过的联通app
-function login() {
+function userlogin() {
     rsaencrypt
     cat > $workdir/signdata <<-EOF
 isRemberPwd=true
@@ -65,7 +62,7 @@ isRemberPwd=true
 &mobile=$(urlencode $crypt_username)
 &yw_code=
 &timestamp=$(date +%Y%m%d%H%M%S)
-&appId=247b001385de5cc6ce11731ba1b15835313d489d604e58280e455a6c91e5058651acfb0f0b77029c2372659c319e02645b54c0acc367e692ab24a546b83c302d
+&appId=$appId
 &keyVersion=1
 &deviceBrand=Oneplus
 &pip=10.0.$(shuf -i 1-255 -n 1).$(shuf -i 1-255 -n 1)
@@ -76,28 +73,22 @@ isRemberPwd=true
 &deviceCode=$deviceId
 EOF
 
-    # cookie
+    # cookie登录
     curl -X POST -sA "$UA" -b $workdir/cookie -c $workdir/cookie "https://m.client.10010.com/mobileService/customer/query/getMyUnicomDateTotle.htm?yw_code=&mobile=$username&version=android%40$unicom_version" | grep -oE "infoDetail" >/dev/null && status=0 || status=1
-    [[ $status == 0 ]] && echo cookies登录$username成功
+    [[ $status == 0 ]] && echo && echo $(date) cookies登录${username:0:3}****${username:7}成功
     
+    # 账号密码登录
     if [[ $status == 1 ]]; then
         curl -X POST -sA "$UA" -c $workdir/cookie "https://m.client.10010.com/mobileService/logout.htm?&desmobile=$username&version=android%40$unicom_version" >/dev/null
         curl -sA "$UA" -b $workdir/cookie -c $workdir/cookie -d @$workdir/signdata "https://m.client.10010.com/mobileService/login.htm" >/dev/null
         token=$(cat $workdir/cookie | grep -E "a_token" | awk  '{print $7}')
-        [[ "$token" = "" ]] && echo "Error, login failed." && echo "cmd for clean: rm -rf $workdir" && exit 1
-        echo 密码登录$username成功
+        [[ "$token" = "" ]] && echo && echo $(date) ${username:0:3}****${username:7} Login Failed. && rm -rf $workdir && return 1
+        echo && echo $(date) 密码登录${username:0:3}****${username:7}成功
     fi
 }
 
-function openChg() {
-    # 每月一号办理解除40G封顶业务
-    [[ "$(date "+%d")" == "01" ]] || return 0
-    echo; echo $(date) starting dingding OpenChg...
-    curl -sA "$UA" -b $workdir/cookie --data "querytype=02&opertag=0" "https://m.client.10010.com/mobileService/businessTransact/serviceOpenCloseChg.htm" >/dev/null
-}
-
 function membercenter() {
-    echo; echo $(date) starting membercenter...
+    echo; echo starting membercenter...
     
     # 获取文章和评论生成数组数据
     NewsListId=($(curl -X POST -sA "$UA" -b $workdir/cookie --data "pageNum=1&pageSize=10&reqChannel=00" https://m.client.10010.com/commentSystem/getNewsList | grep -oE "id\":\"[^\"]*" | awk -F[\"] '{print $NF}' | tr "\n" " "))
@@ -200,12 +191,15 @@ function membercenter() {
 }
 
 function main() {
-    #sleep $(shuf -i 1-10800 -n 1)
-    login
-    membercenter
-    #openChg
-    #rm -rf $workdir
-    echo; echo $(date) $username Accomplished.  Thanks!
+    for ((u = 0; u < ${#all_username_password[*]}; u++)); do
+        sleep $(shuf -i 1-10 -n 1)
+        username=${all_username_password[u]%@*} && password=${all_username_password[u]#*@}
+        workdir="/var/log/CnUnicom_$username" && [[ ! -d "$workdir" ]] && mkdir $workdir
+        userlogin || continue
+        membercenter
+        echo && echo $(date) ${username:0:3}****${username:7} Accomplished.
+        #rm -rf $workdir
+    done
 }
 
 main
