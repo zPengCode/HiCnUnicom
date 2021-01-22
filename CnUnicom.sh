@@ -197,7 +197,7 @@ function tgbotinfo() {
     # TG_BOT通知消息: 未设置相应传入参数时不执行,传入参数格式 token@*** chat_id@*** | 参考: https://github.com/LXK9301/jd_scripts/blob/master/backUp/TG_PUSH.md
     echo ${all_parameter[*]} | grep -qE "token@[a-zA-Z0-9:_-]+" && token="$(echo ${all_parameter[*]} | grep -oE "token@[a-zA-Z0-9:_-]+" | cut -f2 -d@)" || return
     echo ${all_parameter[*]} | grep -qE "chat_id@[0-9-]+" && chat_id="$(echo ${all_parameter[*]} | grep -oE "chat_id@[0-9-]+" | cut -f2 -d@)" || return
-    text="$(echo ${userlogin_err[*]} Failed. ${userlogin_ook[*]} Accomplished.)"
+    text="$(echo ${userlogin_err[*]} ${#userlogin_err[*]} Failed. ${userlogin_ook[*]} ${#userlogin_ook[*]} Accomplished.)"
     curl -sX POST "https://api.telegram.org/bot$token/sendMessage" -d "chat_id=$chat_id&text=$text" >/dev/null
 }
 
@@ -211,7 +211,7 @@ function main() {
         membercenter
         #rm -rf $workdir
     done
-    echo; echo $(date) ${userlogin_err[*]} Failed. ${userlogin_ook[*]} Accomplished.
+    echo; echo $(date) ${userlogin_err[*]} ${#userlogin_err[*]} Failed. ${userlogin_ook[*]} ${#userlogin_ook[*]} Accomplished.
     # TG通知
     tgbotinfo
 }
