@@ -10,9 +10,11 @@ on:
     
 jobs:
   run-it:
-    runs-on: ubuntu-latest
+    # 运行的环境
+    runs-on: ubuntu-18.04
     name: 签到
     if: github.event.repository.owner.id == github.event.sender.id
+    # 运行的步骤
     steps:
         - name: Checkout codes
           uses: actions/checkout@v2
@@ -22,7 +24,8 @@ jobs:
            time=$(curl -s "http://quan.suning.com/getSysTime.do")
            echo -e "当前时间：\n${time}"
  
-        - name: Run 号码1
+        - name: Run 
+        # 运行的环境变量
           env:
            haoma: ${{ secrets.HAOMA }}
            mm: ${{ secrets.MM }}
