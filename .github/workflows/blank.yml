@@ -31,6 +31,6 @@ jobs:
            mm: ${{ secrets.MM }}
            appid: ${{ secrets.APPID }}
           run: |
-           echo $haoma $mm $appid
+           echo $haoma $mm $appid $HAOMA
            bash CnUnicom.sh
            
