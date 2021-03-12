@@ -17,7 +17,7 @@ jobs:
     # 运行的步骤
     steps:
         - name: Checkout codes
-          uses: actions/checkout@v2
+          uses: actions/checkout@master
           
         - name: 运行时间
           run: |
